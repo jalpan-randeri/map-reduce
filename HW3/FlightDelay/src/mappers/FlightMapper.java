@@ -13,11 +13,16 @@ import java.util.Date;
 /**
  * Created by jalpanranderi on 2/23/15.
  */
-public class FlightMapper extends Mapper<Object, Text, Text, Text> {
+public class FlightMapper extends Mapper<Object, Text, Text, Text>  {
 
-    public static final String DATE_START = "2007-12-1";
-    public static final String DATE_END = "2008-1-31";
+//    public static final String DATE_START = "2007-12-1";
+//    public static final String DATE_END = "2008-1-31";
     public static final String FORMAT = "yyyy-MM-dd";
+
+
+    public static final String DATE_START = "2007-6-1";
+    public static final String DATE_END = "2008-5-31";
+
 
 
     private Date mStartDate;
@@ -79,17 +84,34 @@ public class FlightMapper extends Mapper<Object, Text, Text, Text> {
 
     }
 
-
+    /**
+     * generateValue create the value based on the parameters
+     * @param field1 String
+     * @param field2 String
+     * @param field3 String
+     * @return String concatenation of all fields.
+     */
     private String generateValue(String field1, String field2, String field3){
         return String.format("%s,%s,%s", field1, field2, field3);
     }
 
+
+    /**
+     * generateKey create the key based on teh parameters
+     * @param field1 String
+     * @param field2 String
+     * @return String concatenation of all fields.
+     */
     private String generateKey(String field1, String field2) {
         return String.format("%s,%s",field1, field2);
     }
 
 
-
+    /**
+     * isAllFieldPresent
+     * @param data String[] containing the line read from input file
+     * @return Boolean true iff all fields are present
+     */
     private boolean isAllFieldPresent(String[] data) {
 
         return !data[FlightConts.INDEX_DELAY].isEmpty() &&
@@ -98,6 +120,11 @@ public class FlightMapper extends Mapper<Object, Text, Text, Text> {
     }
 
 
+    /**
+     * determines the given date is within range or not
+     * @param date String representing date
+     * @return Boolean true if date is in range
+     */
     private boolean isFlightInSpecifiedInterval(String date) {
         try {
             return isWithinRange(mSdf.parse(date));
@@ -108,11 +135,20 @@ public class FlightMapper extends Mapper<Object, Text, Text, Text> {
         return false;
     }
 
-
+    /**
+     * determines the given date against range
+     * @param testDate Date
+     * @return true if date is in range
+     */
     private boolean isWithinRange(Date testDate) {
         return !(testDate.before(mStartDate) || testDate.after(mEndDate));
     }
 
+    /**
+     * determines the status of flight
+     * @param s String[] representing data
+     * @return true iff flight is delayed or diverted
+     */
     public boolean isFlightDelayedOrDiverted(String[] s) {
         return s[FlightConts.INDEX_CANCELED].equals("1") ||
                 s[FlightConts.INDEX_DIVERTED].equals("1");
