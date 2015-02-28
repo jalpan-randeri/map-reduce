@@ -3,7 +3,6 @@ package mappers;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-
 import java.io.IOException;
 
 /**
@@ -11,16 +10,12 @@ import java.io.IOException;
  */
 public class AverageMapper extends Mapper<Object, Text, Text, Text> {
 
-
     double mSum;
     double mCount;
 
-
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-
-        String value = mCount + ":"+mSum;
-
+        String value = mCount + ":" + mSum;
         context.write(new Text("Dummy"), new Text(value));
     }
 

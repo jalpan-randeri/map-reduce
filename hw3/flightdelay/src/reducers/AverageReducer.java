@@ -15,7 +15,7 @@ public class AverageReducer extends Reducer<Text, Text, Text, Text> {
         double count = 0;
         double sum = 0;
 
-        for(Text val : values){
+        for (Text val : values) {
             String[] tokens = val.toString().split(":");
 
             count = count + Double.parseDouble(tokens[0]);
@@ -23,7 +23,6 @@ public class AverageReducer extends Reducer<Text, Text, Text, Text> {
 
         }
 
-
-        context.write(new Text(""), new Text(String.valueOf(sum/count)));
+        context.write(new Text(""), new Text(String.valueOf(sum / count)));
     }
 }

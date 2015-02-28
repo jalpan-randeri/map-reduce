@@ -1,16 +1,11 @@
---register file:/home/hadoop/lib/pig/piggybank.jar;
-register /Users/jalpanranderi/pig-0.14.0/lib/piggybank.jar;
+register file:/home/hadoop/lib/pig/piggybank.jar;
 define CSVLoader org.apache.pig.piggybank.storage.CSVLoader;
 
+-- set reduce task to 10
+set default_parallel 10;
 
---file1 = LOAD '/Users/jalpanranderi/Downloads/test.csv' USING CSVLoader() parallel 10;
---file2 = LOAD '/Users/jalpanranderi/Downloads/test.csv' USING CSVLoader() parallel 10;
-
---file1 = LOAD '$INPUT' USING CSVLoader() parallel 10;
---file2 = LOAD '$INPUT' USING CSVLoader() parallel 10;
-
-file1 = LOAD '/Users/jalpanranderi/Downloads/data.csv' USING CSVLoader() parallel 10;
-file2 = LOAD '/Users/jalpanranderi/Downloads/data.csv' USING CSVLoader() parallel 10;
+file1 = LOAD '$INPUT' USING CSVLoader() ;
+file2 = LOAD '$INPUT' USING CSVLoader() ;
 
 --$0 as year,
 --$2 as month,
@@ -28,53 +23,46 @@ file2 = LOAD '/Users/jalpanranderi/Downloads/data.csv' USING CSVLoader() paralle
 ip1 = filter file1 by ($11 == 'ORD')
                        and ($17 != 'JFK')
                        and ($41 != 1)
-                       and ($43 != 1) parallel 10;
+                       and ($43 != 1);
 
 
 
 ip2 = filter file2 by ($11 != 'ORD')
                        and ($17 == 'JFK')
                        and ($41 != 1)
-                       and ($43 != 1) parallel 10;
+                       and ($43 != 1);
 
 
 -- apply projection for only required data
-origin_table = foreach ip1 generate $0 as year1,
-                                    $2 as month1,
-                                    $5 as flight_date,
+origin_table = foreach ip1 generate $5 as flight_date,
                                     $17 as dest,
                                     (int)$35 as o_time,
                                     $37 as o_delay;
 
-dest_table = foreach ip2 generate $0 as year2,
-                                  $2 as month2,
-                                  $5 as flight_date,
+dest_table = foreach ip2 generate $5 as flight_date,
                                   $11 as origin,
                                   (int)$24 as d_time,
                                   $37 as d_delay;
 
 
--- join on two tables
-inner_join = join origin_table by (flight_date, dest),
-                  dest_table   by (flight_date, origin)  parallel 10;
+-- join on two tables using date, intermediate station as key
+org_dest = join origin_table by (flight_date, dest),
+                dest_table   by (flight_date, origin);
 
 -- clear the invalid entries where the depart time > arrival time
-valid = filter inner_join by d_time > o_time parallel 10;
+two_leg = filter org_dest by d_time > o_time ;
 
--- apply filter for date
-validDates = filter valid by    (ToDate(origin_table::flight_date,'yyyy-MM-dd') < ToDate('2008-06-01','yyyy-MM-dd')) AND
-	                            (ToDate(origin_table::flight_date,'yyyy-MM-dd') > ToDate('2007-05-31','yyyy-MM-dd'));
+-- apply filter for date to find in_range flights
+in_range = filter two_leg by (ToDate(origin_table::flight_date,'yyyy-MM-dd') < ToDate('2008-06-01','yyyy-MM-dd'))
+	                           and (ToDate(origin_table::flight_date,'yyyy-MM-dd') > ToDate('2007-05-31','yyyy-MM-dd'));
 
 
 
 -- calculate the sum of all delays
-d = foreach validDates generate (float) o_delay + d_delay as sum;
-
-groupped = group d all parallel 10;
+d = foreach in_range generate (double) o_delay + d_delay as sum;
 
 -- calculate the average
-ans = foreach groupped generate AVG(d.sum);
+ans = foreach (group d all) generate AVG(d.sum);
 
 -- store the answer
-dump ans;
---store ans into '$OUTPUT/output';
+store ans into '$OUTPUT/joinfirst_v2';
