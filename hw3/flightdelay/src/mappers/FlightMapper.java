@@ -1,7 +1,7 @@
 package mappers;
 
 import com.opencsv.CSVParser;
-import conts.FlightConts;
+import conts.FlightConst;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -60,7 +60,7 @@ public class FlightMapper extends Mapper<Object, Text, Text, Text> {
                     !data[FlightConts.INDEX_SRC].equals(FlightConts.ORIGIN)) {
 
                 Text k2 = new Text(generateKey(data[FlightConts.INDEX_SRC], data[FlightConts.INDEX_DATE]));
-                Text v2 = new Text(String.format("%s,%s,%s", data[FlightConts.INDEX_DEST],
+                Text v2 = new Text(generateValue(data[FlightConts.INDEX_DEST],
                         data[FlightConts.INDEX_DEP_TIME], data[FlightConts.INDEX_DELAY]));
 
                 context.write(k2, v2);

@@ -24,5 +24,6 @@ public class AverageReducer extends Reducer<Text, Text, Text, Text> {
         }
 
         context.write(new Text(""), new Text(String.valueOf(sum / count)));
+        context.write(new Text(""), new Text(String.valueOf(count)));
     }
 }
