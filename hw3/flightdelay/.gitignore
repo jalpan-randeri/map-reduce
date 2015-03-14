@@ -63,3 +63,6 @@ crashlytics-build.properties
 hs_err_pid*
 
 
+#hadoop
+output/
+temp/
